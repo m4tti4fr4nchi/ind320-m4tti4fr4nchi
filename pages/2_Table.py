@@ -4,7 +4,7 @@ import pandas as pd
 @st.cache_data
 def load_and_clean_data():
     # Read the local CSV file
-    df = pd.read_csv(r"C:\Users\matti\Desktop\ind320-m4tti4fr4nchi\data\reservoirs.csv")
+    df = pd.read_csv("data/reservoirs.csv")
     
     # Rename columns using the same dictionary from the Jupyter Notebook
     translation_dict = {
