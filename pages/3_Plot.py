@@ -37,7 +37,7 @@ start_date, end_date = st.slider(
     "Select a date range to zoom in on the chart:",
     min_value=min_date.to_pydatetime(),
     max_value=max_date.to_pydatetime(),
-    value=(min_date.to_pydatetime(), max_date.to_pydatetime()),
+    value=(min_date.to_pydatetime(), (min_date + pd.DateOffset(months=1)).to_pydatetime()),
     format="MM-YYYY"
 )
 
