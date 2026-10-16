@@ -1,25 +1,13 @@
 import streamlit as st
-import pandas as pd
 
-@st.cache_data
-def load_and_clean_data():
-    df = pd.read_csv("data/reservoirs.csv")
-    translation_dict = {
-        'dato_Id': 'date', 'omrType': 'area_type', 'omrnr': 'area_number',
-        'iso_aar': 'year', 'iso_uke': 'week', 'fyllingsgrad': 'filling_rate',
-        'kapasitet_TWh': 'capacity_twh', 'fylling_TWh': 'filling_twh',
-        'neste_Publiseringsdato': 'next_publish_date',
-        'fyllingsgrad_forrige_uke': 'filling_rate_last_week',
-        'endring_fyllingsgrad': 'filling_rate_change'
-    }
-    df = df.rename(columns=translation_dict)
-    df['date'] = pd.to_datetime(df['date'])
-    return df
+from modules.api import available_months, download_reservoirs
 
 st.title("Extra: Regional Dashboard")
-st.write("A cross-sectional comparison of the 5 Norwegian price areas for the most recent date available.")
+st.write("A cross-sectional comparison of the Norwegian areas for the most recent date available.")
 
-df = load_and_clean_data()
+# Only the latest week is needed here, so the last twelve months are enough
+months = available_months()
+df = download_reservoirs(months[-12], months[-1])
 
 #I took the latest date from the dataset and displayed it as a subheader to indicate the snapshot status of the data being presented.
 latest_date = df['date'].max()
@@ -41,7 +29,7 @@ latest_data = latest_data.sort_values('area_number')
 cols = st.columns(5)
 for i, row in enumerate(latest_data.itertuples()):
     with cols[i % 5]:
-        area_name = f"Area {row.area_number}"
+        area_name = row.area
         current_rate = row.filling_rate * 100
         change = row.filling_rate_change * 100
         st.metric(label=area_name, value=f"{current_rate:.1f}%", delta=f"{change:.2f}%")

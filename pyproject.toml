@@ -36,5 +36,6 @@ dependencies = [
     "lorem",
     "pymongo",
     "streamlit",
-    "nbstripout"
+    "nbstripout",
+    "pyasyncore>=1.0.5",
 ]
