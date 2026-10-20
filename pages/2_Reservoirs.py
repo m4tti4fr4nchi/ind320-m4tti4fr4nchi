@@ -22,6 +22,10 @@ if df_type.empty:
     st.warning("No data available for this selection.")
     st.stop()  # stop the script here instead of drawing empty charts
 
+
+# Pages two and three of part 1 are merged into one page with two tabs: Streamlit resets the widgets
+# when the user changes page, so the chosen area type and months were lost between separate pages.
+# With tabs, the same radio buttons and slider control both the table and the charts.
 # st.tabs creates tabs on the same page; everything inside "with <tab>:" is drawn in that tab
 overview, trends = st.tabs(["Overview", "Trends"])
 
