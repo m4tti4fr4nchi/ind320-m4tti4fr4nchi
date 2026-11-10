@@ -1,14 +1,18 @@
-"""Module to read the cross-border flows that the Jupyter Notebook stored in MongoDB."""
+"""Module to read the data that the Jupyter Notebooks stored in MongoDB (cross-border flows, sampled locations)."""
 import pandas as pd
 import pymongo
 import streamlit as st
 
 # st.cache_resource keeps one shared object (here the database connection) for all users and reruns
 @st.cache_resource
-def get_collection():
+def get_client():
     """One MongoDB connection for the whole app (the URI is read from the Streamlit secrets)."""
-    client = pymongo.MongoClient(st.secrets["mongo"]["uri"])
-    return client["ind320"]["cross_border_flows"]
+    return pymongo.MongoClient(st.secrets["mongo"]["uri"])
+
+
+def get_collection(name="cross_border_flows"):
+    """A collection of the ind320 database: the ENTSO-E flows by default, or e.g. "sample_points"."""
+    return get_client()["ind320"][name]
 
 # st.cache_data stores the returned data; ttl=3600 refreshes it after one hour
 @st.cache_data(ttl=3600)

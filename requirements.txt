@@ -3,3 +3,6 @@ pandas
 plotly
 requests
 pymongo
+scipy
+scikit-learn
+statsmodels

@@ -38,4 +38,5 @@ dependencies = [
     "streamlit",
     "nbstripout",
     "pyasyncore>=1.0.5",
+    "geopandas>=1.2.0",
 ]
