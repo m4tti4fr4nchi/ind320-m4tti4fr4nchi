@@ -4,6 +4,7 @@ import plotly.express as px
 import streamlit as st
 
 from modules.db import get_hourly_flows, get_options, get_yearly_totals
+from modules.theme import ACCENT, CATEGORICAL, PRIMARY
 
 st.set_page_config(layout="wide")
 st.title("Cross-border Flows")
@@ -12,9 +13,9 @@ st.write("Physical electricity flows between Norway and its neighbours, read fro
 # Connections and years found in MongoDB fill the controls (no hard-coded lists)
 connections, years = get_options()
 MONTHS = {number: calendar.month_abbr[number] for number in range(1, 13)}  # 1 -> "Jan", ...
-COLOURS = {"import": "#1f77b4", "export": "#ff7f0e"}  # same colours as in the notebook
+COLOURS = {"import": PRIMARY, "export": ACCENT}  # colours of the app theme (modules/theme.py)
 LABELS = {"import": "Import to Norway", "export": "Export from Norway"}
-CONNECTION_COLOURS = dict(zip(connections, px.colors.qualitative.Plotly))  # same colour whatever is selected
+CONNECTION_COLOURS = dict(zip(connections, CATEGORICAL))  # same colour whatever is selected
 
 # st.columns splits the page in two; everything inside "with left:" / "with right:" goes in that column
 left, right = st.columns(2)

@@ -6,3 +6,4 @@ pymongo
 scipy
 scikit-learn
 statsmodels
+river

@@ -5,3 +5,5 @@ backgroundColor = "#0f172a"
 secondaryBackgroundColor = "#111827"
 textColor = "#e5e7eb"
 font = "sans serif"
+# Colours of the series in st.line_chart and in Plotly charts without own colours (same list as modules/theme.py)
+chartCategoricalColors = ["#4cc9f0", "#f4a261", "#90be6d", "#e66767", "#b392f0", "#f9c74f", "#43aa8b", "#9aa0a6"]

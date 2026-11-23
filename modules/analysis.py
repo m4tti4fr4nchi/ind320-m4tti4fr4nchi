@@ -9,7 +9,7 @@ from scipy.stats import median_abs_deviation
 from sklearn.neighbors import LocalOutlierFactor
 from statsmodels.tsa.seasonal import STL
 
-LINE_COLOUR, OUTLIER_COLOUR, BOUND_COLOUR = "#3987e5", "#e66767", "#9aa0a6"
+from .theme import ALERT as OUTLIER_COLOUR, GREY as BOUND_COLOUR, PRIMARY as LINE_COLOUR   # colours of the app theme
 
 
 def spc_outliers(series, cutoff=100, n_std=3.0, label=None):

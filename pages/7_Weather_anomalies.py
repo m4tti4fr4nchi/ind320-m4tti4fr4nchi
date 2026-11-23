@@ -1,55 +1,42 @@
-import pandas as pd
-import requests
 import streamlit as st
 
 from modules.analysis import lof_anomalies, spc_outliers
-from modules.session import selected_area
-from modules.weather import WEATHER_VARIABLES, download_weather
+from modules.session import period_days, selected_area
+from modules.weather import WEATHER_VARIABLES, load_weather
 
 st.set_page_config(layout="wide")
 st.title("Weather Anomalies")
-st.write("Hourly ERA5 reanalysis from open-meteo for the area chosen in the sidebar, averaged over random "
-         "locations inside the area. The first tab finds outliers with Statistical Process Control, the second "
-         "anomalies with the Local Outlier Factor.")
+st.write("Hourly ERA5 reanalysis for the area and the period chosen in the sidebar and on the Map page. The first "
+         "tab finds outliers with Statistical Process Control on the seasonally adjusted variations (SATV), the "
+         "second anomalies with the Local Outlier Factor.")
 
-# Global area (sidebar) and a local choice of year: the weather download depends on both
+# Global area (sidebar) and global period (Map page): both are kept in st.session_state
 _, area = selected_area()
-this_year = pd.Timestamp.now().year
-year = st.selectbox("Year", list(range(this_year - 1, 1999, -1)), index=1)  # complete years; default: last year but one
-
-# Hidden download: cached per area and year, with a spinner while open-meteo answers
-try:
-    weather, locations = download_weather(area, year)
-except requests.HTTPError as error:
-    # The free API allows 600 calls per minute; one area and year with 10 locations counts as about 261 calls
-    if error.response is not None and error.response.status_code == 429:
-        st.warning("open-meteo's free API limit was reached (too many downloads in a short time). "
-                   "Please wait a minute and reload the page.")
-    else:
-        st.error(f"The weather download failed: {error}")
+start, end = period_days()
+weather = load_weather(area, start, end)
+if weather.empty:
+    st.warning("No weather data for this area and period.")
     st.stop()
-st.caption(f"ERA5 hourly data for {area}, {year}: average of {len(locations)} random locations "
-           f"({len(weather):,} hours).")
-with st.expander("Downloaded locations"):
-    st.map(locations, latitude="latitude", longitude="longitude", size=3000)  # confirmation of the download
+st.caption(f"Hourly weather of {area} from {start:%d %b %Y} to {end:%d %b %Y} ({len(weather):,} hours). "
+           "Weighted mean of all the locations sampled inside the area.")
 
-spc_tab, lof_tab = st.tabs(["Outliers (SPC)", "Anomalies (LOF)"])
+spc_tab, lof_tab = st.tabs(["Outliers (SPC on SATV)", "Anomalies (LOF)"])
 
 # --- Outliers: DCT high-pass filter + SPC boundaries from robust statistics ---
 with spc_tab:
     left, middle, right = st.columns(3)
-    # Precipitation as in the assignment text; the temperature (as in last year's task) is one click away
     variable = left.selectbox("Variable", list(WEATHER_VARIABLES), format_func=WEATHER_VARIABLES.get,
-                              index=list(WEATHER_VARIABLES).index("precipitation"), key="spc_variable")
-    cutoff = middle.slider("DCT frequency cut-off", 10, 500, 100, step=10,
-                           help="Components below the cut-off (slow, seasonal variations) are removed. "
-                                "100 removes variations slower than about one week.")
+                              index=list(WEATHER_VARIABLES).index("temperature_2m"), key="spc_variable")
+    slowest_days = middle.slider("Remove variations slower than (days)", 1, 30, 7,
+                                 help="The DCT high-pass filter removes the slow, seasonal part of the series; "
+                                      "what is left is the seasonally adjusted variation (SATV).")
     n_std = right.slider("Robust standard deviations", 1.0, 6.0, 3.0, step=0.5)
 
+    # DCT component k has a period of 2N/k hours (N = number of hours), so the cut-off follows the chosen days
+    cutoff = max(1, round(2 * len(weather) / (slowest_days * 24)))
     fig, outliers, summary = spc_outliers(weather[variable], cutoff, n_std, label=WEATHER_VARIABLES[variable])
     st.plotly_chart(fig, width="stretch")
 
-    # Summary statistics of the outliers
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Outliers", f"{summary['outliers']:,}")
     c2.metric("Share of hours", f"{summary['share']:.2f} %")
@@ -62,7 +49,7 @@ with spc_tab:
 with lof_tab:
     left, right = st.columns(2)
     variable = left.selectbox("Variable", list(WEATHER_VARIABLES), format_func=WEATHER_VARIABLES.get,
-                              index=list(WEATHER_VARIABLES).index("temperature_2m"), key="lof_variable")
+                              index=list(WEATHER_VARIABLES).index("precipitation"), key="lof_variable")
     contamination = right.slider("Proportion of anomalies (%)", 0.1, 10.0, 1.0, step=0.1) / 100
 
     fig, anomalies, summary = lof_anomalies(weather[variable], contamination, label=WEATHER_VARIABLES[variable])
@@ -79,9 +66,10 @@ with lof_tab:
 with st.expander("Data source"):
     st.markdown(
         "- **Weather:** [open-meteo](https://open-meteo.com/en/docs/historical-weather-api) historical API, "
-        "ERA5 reanalysis, hourly values in UTC.\n"
-        "- **Locations:** 1000 random points per area were sampled in the notebook from the NVE shapefiles "
-        "(atlas.nve.no) and stored in MongoDB; this page downloads 10 of them and averages them.\n"
+        "ERA5 reanalysis, hourly values in UTC, 2021–2025.\n"
+        "- **Locations:** all 1000 points sampled per area in part 3, grouped on a 1-degree grid (130 locations "
+        "in total). The notebook of part 4 downloaded each location once and stored the weighted mean of every "
+        "area in MongoDB, which this page reads.\n"
         "- **Methods:** as in the notebook – DCT high-pass filter and SPC boundaries from the median and MAD; "
         "Local Outlier Factor on the standardised value and the time position."
     )
