@@ -2,14 +2,14 @@ import streamlit as st
 
 from modules.api import AREA_TYPES, METRICS, download_reservoirs
 from modules.session import months_slider, selected_area
+from modules.layout import page_header
 
 ALL_COLUMNS = "all"
 
 # Wide layout: use the whole browser width, so that all area columns of the table fit
-st.set_page_config(layout="wide")
-st.title("Reservoirs")
-st.write("Weekly reservoir statistics from the NVE API. The type of area is chosen in the sidebar and the months "
-         "to download below; both tabs use the same selection.")
+page_header("Reservoirs", "💧",
+            "Weekly reservoir statistics from the NVE API. The type of area is chosen in the sidebar and the "
+            "months to download below; both tabs use the same selection.", show_area=False)
 
 # Global type of area (sidebar, shared by all pages) and local selection slider for the months to download
 area_type, _ = selected_area()

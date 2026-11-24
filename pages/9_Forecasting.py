@@ -6,6 +6,7 @@ from modules.forecast import CURRENCIES, error_quantiles, forecast_filling, week
 from modules.theme import ACCENT, BACKGROUND, GREY, PRIMARY, TEXT
 from modules.session import selected_area, selected_period
 from modules.weather import WEATHER_VARIABLES
+from modules.layout import page_header
 
 EXOG_OPTIONS = {**WEATHER_VARIABLES, **CURRENCIES}
 ACTUAL_COLOUR, FORECAST_COLOUR = GREY, ACCENT   # modules/theme.py
@@ -27,11 +28,10 @@ def run_forecast(area, train_end, horizon, history_weeks, exog, order, seasonal_
     return data, result
 
 
-st.set_page_config(layout="wide")
-st.title("Forecasting")
-st.write("Weekly forecast of the reservoir filling of the area chosen in the sidebar with River's SNARIMAX, the "
-         "streaming version of SARIMAX (see the notebook of part 4). The default settings are the best ones "
-         "found in the notebook: SNARIMAX(1,1,1)(1,1,0,52) with precipitation as exogenous variable.")
+page_header("Forecasting", "🔮",
+            "Weekly forecast of the reservoir filling of the chosen area with River's SNARIMAX, the streaming "
+            "version of SARIMAX (see the notebook of part 4). The default settings are the best ones found in the "
+            "notebook: SNARIMAX(1,1,1)(1,1,0,52) with precipitation as exogenous variable.", show_period=True)
 
 _, area = selected_area()
 _, period_end = selected_period()
@@ -44,7 +44,7 @@ mode = st.radio("Training data until", ["map", "latest"], horizontal=True,
                              "latest": f"Latest NVE week ({latest_week:%d %b %Y}): forecast the real future"}.get)
 train_end = period_end if mode == "map" else latest_week
 
-c1, c2, c3 = st.columns([1, 1, 2])
+c1, c2, c3 = st.container(border=True).columns([1, 1, 2])
 horizon = c1.slider("Horizon (weeks)", 1, 52, 12)
 history_weeks = c2.slider("Training history (weeks)", 104, 1600, 1000, step=52,
                           help="Counted back from the end of the training data. With exogenous variables the "
@@ -135,14 +135,14 @@ st.caption("Press ▶ Play to see the forecast week by week; the slider jumps to
 known = result.dropna(subset=["actual"])
 c1, c2, c3 = st.columns(3)
 c1.metric("Forecast in the last week", f"{forecast.iloc[-1]:.1f} %",
-          delta=f"{forecast.iloc[-1] - history.iloc[-1]:+.1f} points vs. the last training week")
+          delta=f"{forecast.iloc[-1] - history.iloc[-1]:+.1f} points vs. the last training week", border=True)
 if len(known):
     c2.metric(f"Mean absolute error ({len(known)} known weeks)",
-              f"{(known['forecast'] - known['actual']).abs().mean() * 100:.1f} points")
+              f"{(known['forecast'] - known['actual']).abs().mean() * 100:.1f} points", border=True)
 else:
-    c2.metric("Mean absolute error", "–", help="The forecast weeks are in the future: no actual values yet.")
+    c2.metric("Mean absolute error", "–", help="The forecast weeks are in the future: no actual values yet.", border=True)
 c3.metric("Training", f"{min(history_weeks, len(data.loc[:train_end].dropna(subset=['filling_rate'] + exog)))} weeks",
-          delta="exogenous: " + (", ".join(exog) if exog else "none"), delta_color="off")
+          delta="exogenous: " + (", ".join(exog) if exog else "none"), delta_color="off", border=True)
 
 with st.expander("Forecast values"):
     table = (result * 100).round(1).rename(columns={"forecast": "Forecast (%)", "actual": "Actual (%)",

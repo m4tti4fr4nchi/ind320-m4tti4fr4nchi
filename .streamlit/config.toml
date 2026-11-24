@@ -2,8 +2,23 @@
 base = "dark"
 primaryColor = "#4cc9f0"
 backgroundColor = "#0f172a"
-secondaryBackgroundColor = "#111827"
+secondaryBackgroundColor = "#1e293b"
 textColor = "#e5e7eb"
-font = "sans serif"
+
+# Fonts loaded from Google Fonts: Inter for the text, Space Grotesk for the titles
+font = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+headingFont = "'Space Grotesk':https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap"
+
+# Rounded corners and light borders on widgets, containers and tables
+baseRadius = "0.6rem"
+borderColor = "#334155"
+showWidgetBorder = true
+dataframeHeaderBackgroundColor = "#1e293b"
+
 # Colours of the series in st.line_chart and in Plotly charts without own colours (same list as modules/theme.py)
 chartCategoricalColors = ["#4cc9f0", "#f4a261", "#90be6d", "#e66767", "#b392f0", "#f9c74f", "#43aa8b", "#9aa0a6"]
+
+# The sidebar is a little darker than the page, so menu and content are clearly separated
+[theme.sidebar]
+backgroundColor = "#0b1120"
+secondaryBackgroundColor = "#1e293b"

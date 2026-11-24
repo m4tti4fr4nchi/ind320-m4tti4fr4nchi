@@ -7,6 +7,7 @@ from modules.api import FIRST_MONTH, available_months, download_reservoirs
 from modules.theme import ACCENT, GREY, PRIMARY, TEXT
 from modules.session import period_days, selected_area
 from modules.weather import FIRST_DAY, LAST_DAY, WEATHER_VARIABLES, load_weather, weekly
+from modules.layout import page_header
 
 # Magasinstatistikk variables that make sense to compare with the weather
 RESERVOIR_VARIABLES = {
@@ -16,18 +17,16 @@ RESERVOIR_VARIABLES = {
 }
 WEATHER_COLOUR, RESERVOIR_COLOUR, CORRELATION_COLOUR = ACCENT, PRIMARY, TEXT   # modules/theme.py
 
-st.set_page_config(layout="wide")
-st.title("Sliding Window Correlation")
-st.write("Correlation between a weather variable and a reservoir variable of the area chosen in the sidebar, "
-         "computed in a window that slides over the weekly series (2021–2025). A lag shifts the weather forward, "
-         "to compare the reservoirs with the weather of some weeks before. The period chosen on the Map page is "
-         "shaded.")
+page_header("Sliding Window Correlation", "🔗",
+            "Correlation between a weather variable and a reservoir variable of the chosen area, computed in a "
+            "window that slides over the weekly series (2021–2025). A lag shifts the weather forward, to compare "
+            "the reservoirs with the weather of some weeks before. The chosen period is shaded.", show_period=True)
 
 _, area = selected_area()
 start, end = period_days()
 
 # --- Controls ---
-c1, c2, c3, c4 = st.columns(4)
+c1, c2, c3, c4 = st.container(border=True).columns(4)
 weather_variable = c1.selectbox("Weather variable", list(WEATHER_VARIABLES), format_func=WEATHER_VARIABLES.get,
                                 index=list(WEATHER_VARIABLES).index("precipitation"))
 reservoir_variable = c2.selectbox("Reservoir variable", list(RESERVOIR_VARIABLES),
@@ -74,11 +73,11 @@ st.plotly_chart(fig, width="stretch")
 # --- Summary: whole series, chosen period, and the correlation for every lag ---
 in_period = correlation.loc[start:end]
 m1, m2, m3 = st.columns(3)
-m1.metric("Correlation, all weeks", f"{data['reservoir'].corr(data['weather']):.2f}")
-m2.metric("Mean sliding correlation in the period", f"{in_period.mean():.2f}" if in_period.notna().any() else "–")
+m1.metric("Correlation, all weeks", f"{data['reservoir'].corr(data['weather']):.2f}", border=True)
+m2.metric("Mean sliding correlation in the period", f"{in_period.mean():.2f}" if in_period.notna().any() else "–", border=True)
 seasonal = correlation.groupby(correlation.index.month).mean()   # mean sliding correlation per calendar month
 month_name = lambda month: pd.Timestamp(2000, month, 1).strftime("%b")
-m3.metric("Strongest / weakest month (mean)", f"{month_name(seasonal.idxmax())} / {month_name(seasonal.idxmin())}")
+m3.metric("Strongest / weakest month (mean)", f"{month_name(seasonal.idxmax())} / {month_name(seasonal.idxmin())}", border=True)
 
 left, right = st.columns(2)
 with left:

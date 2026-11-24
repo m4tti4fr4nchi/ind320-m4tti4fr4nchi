@@ -3,12 +3,12 @@ import streamlit as st
 from modules.analysis import lof_anomalies, spc_outliers
 from modules.session import period_days, selected_area
 from modules.weather import WEATHER_VARIABLES, load_weather
+from modules.layout import page_header
 
-st.set_page_config(layout="wide")
-st.title("Weather Anomalies")
-st.write("Hourly ERA5 reanalysis for the area and the period chosen in the sidebar and on the Map page. The first "
-         "tab finds outliers with Statistical Process Control on the seasonally adjusted variations (SATV), the "
-         "second anomalies with the Local Outlier Factor.")
+page_header("Weather Anomalies", "🌦️",
+            "Hourly ERA5 reanalysis for the chosen area and period. The first tab finds outliers with Statistical "
+            "Process Control on the seasonally adjusted variations (SATV), the second anomalies with the Local "
+            "Outlier Factor.", show_period=True)
 
 # Global area (sidebar) and global period (Map page): both are kept in st.session_state
 _, area = selected_area()
@@ -24,7 +24,7 @@ spc_tab, lof_tab = st.tabs(["Outliers (SPC on SATV)", "Anomalies (LOF)"])
 
 # --- Outliers: DCT high-pass filter + SPC boundaries from robust statistics ---
 with spc_tab:
-    left, middle, right = st.columns(3)
+    left, middle, right = st.container(border=True).columns(3)
     variable = left.selectbox("Variable", list(WEATHER_VARIABLES), format_func=WEATHER_VARIABLES.get,
                               index=list(WEATHER_VARIABLES).index("temperature_2m"), key="spc_variable")
     slowest_days = middle.slider("Remove variations slower than (days)", 1, 30, 7,
@@ -38,16 +38,16 @@ with spc_tab:
     st.plotly_chart(fig, width="stretch")
 
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Outliers", f"{summary['outliers']:,}")
-    c2.metric("Share of hours", f"{summary['share']:.2f} %")
-    c3.metric("Above / below", f"{summary['above']} / {summary['below']}")
-    c4.metric("Robust SD of SATV", f"{summary['robust_sd']:.3f}")
+    c1.metric("Outliers", f"{summary['outliers']:,}", border=True)
+    c2.metric("Share of hours", f"{summary['share']:.2f} %", border=True)
+    c3.metric("Above / below", f"{summary['above']} / {summary['below']}", border=True)
+    c4.metric("Robust SD of SATV", f"{summary['robust_sd']:.3f}", border=True)
     with st.expander("Outlier hours"):
         st.dataframe(outliers.sort_values("satv", key=abs, ascending=False), width="stretch")
 
 # --- Anomalies: Local Outlier Factor on value and time ---
 with lof_tab:
-    left, right = st.columns(2)
+    left, right = st.container(border=True).columns(2)
     variable = left.selectbox("Variable", list(WEATHER_VARIABLES), format_func=WEATHER_VARIABLES.get,
                               index=list(WEATHER_VARIABLES).index("precipitation"), key="lof_variable")
     contamination = right.slider("Proportion of anomalies (%)", 0.1, 10.0, 1.0, step=0.1) / 100
@@ -56,10 +56,10 @@ with lof_tab:
     st.plotly_chart(fig, width="stretch")
 
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Anomalies", f"{summary['anomalies']:,}")
-    c2.metric("Share of hours", f"{summary['share']:.2f} %")
-    c3.metric("Mean of anomalies / all", f"{summary['mean_anomalies']:.2f} / {summary['mean_all']:.2f}")
-    c4.metric("LOF score threshold", f"{summary['threshold']:.2f}")
+    c1.metric("Anomalies", f"{summary['anomalies']:,}", border=True)
+    c2.metric("Share of hours", f"{summary['share']:.2f} %", border=True)
+    c3.metric("Mean of anomalies / all", f"{summary['mean_anomalies']:.2f} / {summary['mean_all']:.2f}", border=True)
+    c4.metric("LOF score threshold", f"{summary['threshold']:.2f}", border=True)
     with st.expander("Anomalous hours"):
         st.dataframe(anomalies.sort_values("lof_score", ascending=False), width="stretch")
 

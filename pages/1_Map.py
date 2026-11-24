@@ -10,13 +10,18 @@ from modules.api import FIRST_MONTH, available_months, download_reservoirs
 from modules.theme import PRIMARY as HIGHLIGHT
 from modules.session import AREAS_BY_TYPE, period_days, period_slider, select_area, selected_area
 from modules.weather import SUM_VARIABLES, WEATHER_VARIABLES, load_weather, weather_by_area, weekly
+from modules.layout import page_header
 
 FILLING = "filling_rate"
 COLOUR_OPTIONS = {FILLING: "Reservoir filling (%)", **WEATHER_VARIABLES}
-# Colour scales that match the meaning of each variable (blue = water, red/blue = warm/cold)
-COLOUR_SCALES = {FILLING: "Blues", "temperature_2m": "RdBu_r", "precipitation": "Blues", "rain": "Blues",
-                 "snowfall": "Purples", "relative_humidity_2m": "Teal", "cloud_cover": "Greys",
-                 "wind_speed_10m": "YlOrRd", "wind_gusts_10m": "YlOrRd"}
+# Water: from dark blue (little) to the bright cyan of the theme (much), so on the dark map the areas with much
+# water stand out (a white-to-blue scale would make the areas with little water the brightest ones)
+WATER = [[0, "#1e3a5f"], [0.5, "#2b8cc4"], [1, "#a5f3fc"]]
+# Colour scales that match the meaning of each variable (blue = water, red/blue = warm/cold); Viridis and Cividis
+# (readable also with colour blindness, see the course book) for the variables without a natural colour
+COLOUR_SCALES = {FILLING: WATER, "temperature_2m": "RdBu_r", "precipitation": WATER, "rain": WATER,
+                 "snowfall": "Purples", "relative_humidity_2m": "Viridis", "cloud_cover": "Cividis",
+                 "wind_speed_10m": "Viridis", "wind_gusts_10m": "Viridis"}
 
 
 @st.cache_data
@@ -32,19 +37,20 @@ def on_map_click():
         select_area(points[0]["location"])
 
 
-st.set_page_config(layout="wide")
-st.title("Map")
-st.write("Price areas and precipitation areas of Norway, coloured by reservoir filling or by a weather variable "
-         "in the chosen period. **Click an area** to select it: the selection and the period are used by all the "
-         "other pages.")
+page_header("Map", "🗺️",
+            "Price areas and precipitation areas of Norway, coloured by reservoir filling or by a weather "
+            "variable in the chosen period. **Click an area** to select it: the area and the period are used by "
+            "all the other pages.", show_period=True)
 
 # --- Controls: type of areas, colour and period (the period is stored in st.session_state) ---
 global_type, area = selected_area()
-left, right = st.columns([1, 2])
+controls = st.container(border=True)   # all the controls of the map in one bordered box
+left, right = controls.columns([1, 2])
 area_type = left.radio("Areas", ["EL", "VASS"], horizontal=True, index=1 if global_type == "VASS" else 0,
                        format_func={"EL": "Price areas (NO1–NO5)", "VASS": "Precipitation areas (VASS1–3)"}.get)
 colour = right.selectbox("Colour by", list(COLOUR_OPTIONS), format_func=COLOUR_OPTIONS.get)
-period_slider()
+with controls:
+    period_slider()
 start, end = period_days()
 
 # --- One value per area in the period ---
@@ -87,7 +93,7 @@ with info_column:
         value = values.set_index("area").loc[area, "value"]
         mean_all = values["value"].mean()
         st.metric(value_label, f"{value:.1f}", delta=f"{value - mean_all:+.1f} vs. mean of the areas",
-                  delta_color="off")
+                  delta_color="off", border=True)
         ranking = values.sort_values("value", ascending=False).reset_index(drop=True)
         st.dataframe(ranking.rename(columns={"area": "Area", "value": value_label}), hide_index=True,
                      width="stretch")

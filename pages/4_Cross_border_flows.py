@@ -5,10 +5,10 @@ import streamlit as st
 
 from modules.db import get_hourly_flows, get_options, get_yearly_totals
 from modules.theme import ACCENT, CATEGORICAL, PRIMARY
+from modules.layout import page_header
 
-st.set_page_config(layout="wide")
-st.title("Cross-border Flows")
-st.write("Physical electricity flows between Norway and its neighbours, read from MongoDB.")
+page_header("Cross-border Flows", "⚡",
+            "Physical electricity flows between Norway and its neighbours, read from MongoDB.", show_area=False)
 
 # Connections and years found in MongoDB fill the controls (no hard-coded lists)
 connections, years = get_options()

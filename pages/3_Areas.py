@@ -2,11 +2,11 @@ import streamlit as st
 
 from modules.api import AREA_TYPES, available_months, download_areas, download_reservoirs
 from modules.session import selected_area
+from modules.layout import page_header
 
-st.set_page_config(layout="wide")
-st.title("Areas")
-st.write("The areas of Norway in the NVE reservoir statistics: the latest filling rate of every area of the type "
-         "chosen in the sidebar, and the description of all the areas covered by the API.")
+page_header("Areas", "📋",
+            "The areas of Norway in the NVE reservoir statistics: the latest filling rate of every area of the "
+            "type chosen in the sidebar, and the description of all the areas covered by the API.")
 
 # The latest twelve months are enough for the snapshot and to check which areas have data
 months = available_months()
@@ -21,7 +21,7 @@ columns = st.columns(max(len(snapshot), 1))
 for column, row in zip(columns, snapshot.itertuples()):
     # The area chosen in the sidebar (or on the map) is marked with the pin
     column.metric(("📍 " if row.area == area else "") + row.area, f"{row.filling_rate * 100:.1f} %",
-                  delta=f"{row.filling_rate_change * 100:+.2f} points in a week")
+                  delta=f"{row.filling_rate_change * 100:+.2f} points in a week", border=True)
 st.caption(f"Areas shown: {AREA_TYPES[area_type]} (change the type of area in the sidebar).")
 st.divider()
 
